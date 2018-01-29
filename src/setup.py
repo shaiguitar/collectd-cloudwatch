@@ -381,7 +381,7 @@ class InteractiveConfigurator(object):
         choice = Prompt("\nInclude the Auto-Scaling Group name as a metric dimension:", options=["No", "Yes"], default="1").run()
         if choice == "2":
             self.config.push_asg = True
-            
+
     def _get_constant_dimension_value(self):
         return Prompt(message="Enter FixedDimension value [" + Color.green("ALL") + "]: ", default="ALL").run()
 
@@ -832,6 +832,10 @@ def main():
         '-D', '--debug_setup', default=False,
         action='store_true', help='Provides verbose logging during setup process'
     )
+    parser.add_argument(
+        '-S', '--skip_restart', default=False,
+        action='store_true', help='Restart daemon after installation or not. Defaulted to restart, pass flag to skip.'
+    )
     args = parser.parse_args()
 
     if args.proxy_port is None and args.proxy_name or args.proxy_port and args.proxy_name is None:
@@ -862,6 +866,7 @@ def main():
     push_constant = args.push_constant
     dimension_value = args.dimension_value
     debug_setup = args.debug_setup
+    skip_restart = args.skip_restart
     debug = args.debug
 
     def install_plugin():
@@ -874,7 +879,8 @@ def main():
             _run_command(UNTAR_PLUGIN_CMD, exit_on_failure=True)
             _run_command(COPY_PLUGIN_CMD, shell=True, exit_on_failure=True)
             supply_config()
-            restart_collectd()
+            if skip_restart == False:
+              restart_collectd()
         finally:
             remove_temp_dir()
 
